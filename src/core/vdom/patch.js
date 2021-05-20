@@ -73,6 +73,11 @@ export function createPatchFunction (backend) {
 
   const { modules, nodeOps } = backend
 
+  // eg. cbs = {
+  //               create: [updateAttrs, updateClass, ...],
+  //               update: [updateAttrs, updateClass,...],
+  //                ...
+  //             }
   for (i = 0; i < hooks.length; ++i) {
     cbs[hooks[i]] = []
     for (j = 0; j < modules.length; ++j) {

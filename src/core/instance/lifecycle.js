@@ -138,6 +138,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+// 用在 Vue.prototype.$mount
 export function mountComponent (
   vm: Component,
   el: ?Element,
@@ -205,8 +206,8 @@ export function mountComponent (
 
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
-  if (vm.$vnode == null) {
-    vm._isMounted = true
+  if (vm.$vnode == null) { // vm.$vnode 表示 Vue 实例的父虚拟 Node, 为 Null 则表示当前是根 Vue 的实例
+    vm._isMounted = true // 表示这个实例已经挂载了
     callHook(vm, 'mounted')
   }
   return vm

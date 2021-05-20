@@ -109,6 +109,7 @@ export function createComponent (
     return
   }
 
+  // 就是 Vue
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
@@ -187,6 +188,7 @@ export function createComponent (
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
+  // 组件的VNode 没有 children 【第3个参数】
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
@@ -235,6 +237,7 @@ function installComponentHooks (data: VNodeData) {
   }
 }
 
+// 依次执行要合并的函数钩子
 function mergeHook (f1: any, f2: any): Function {
   const merged = (a, b) => {
     // flow complains about extra args which is why we use any

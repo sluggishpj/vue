@@ -13,6 +13,7 @@ let builds = require('./config').getAllBuilds()
 // filter builds via command line arg
 if (process.argv[2]) {
   const filters = process.argv[2].split(',')
+  console.log('filters', filters)
   builds = builds.filter(b => {
     return filters.some(f => b.output.file.indexOf(f) > -1 || b._name.indexOf(f) > -1)
   })
@@ -22,7 +23,7 @@ if (process.argv[2]) {
     return b.output.file.indexOf('weex') === -1
   })
 }
-
+console.log('builds', builds)
 build(builds)
 
 function build (builds) {
