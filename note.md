@@ -1,6 +1,6 @@
 ## 思维导图
 
-https://o0gxme5599.feishu.cn/mindnotes/bmncnINkWma5rgcugv8nOKDbUIe
+https://www.yuque.com/docs/share/accaea64-4e93-4891-b779-406a0a0f368c
 
 ## 本地测试运行
 

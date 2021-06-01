@@ -1,6 +1,6 @@
 /*!
  * Vue.js v2.6.12
- * (c) 2014-2020 Evan You
+ * (c) 2014-2021 Evan You
  * Released under the MIT License.
  */
 (function (global, factory) {
@@ -186,6 +186,7 @@
 
   /**
    * Hyphenate a camelCase string.
+   * onClick => on-click
    */
   var hyphenateRE = /\B([A-Z])/g;
   var hyphenate = cached(function (str) {
@@ -1039,7 +1040,8 @@
       get: function reactiveGetter () {
         var value = getter ? getter.call(obj) : val;
         if (Dep.target) {
-          dep.depend();
+          dep.depend(); // 把 dep 添加到 Dep.target[是watcher] 的 newDeps[] 中
+                       // 同时把 Dep.target 加入到 dep.subs[] 中
           if (childOb) {
             childOb.dep.depend();
             if (Array.isArray(value)) {
@@ -2348,6 +2350,8 @@
   // normalization is needed - if any child is an Array, we flatten the whole
   // thing with Array.prototype.concat. It is guaranteed to be only 1-level deep
   // because functional components already normalize their own children.
+  // 把数组铺平 [1, [2,3], 4, [5, 6]] =>[1,2,3,4,5,6]，场景是 render 函数是编译生成的
+  // 其包含的元素都是 VNode/VNode[]
   function simpleNormalizeChildren (children) {
     for (var i = 0; i < children.length; i++) {
       if (Array.isArray(children[i])) {
@@ -2361,6 +2365,7 @@
   // e.g. <template>, <slot>, v-for, or when the children is provided by user
   // with hand-written render functions / JSX. In such cases a full normalization
   // is needed to cater to all possible types of children values.
+  // 场景：render 函数是用户手写的，当 children 只有一个节点的时候，Vue.js 从接口层面允许用户把 children 写成基础类型用来创建单个简单的文本节点，这种情况会调用 createTextVNode 创建一个文本节点的 VNode；另一个场景是当编译 slot、v-for 的时候会产生嵌套数组
   function normalizeChildren (children) {
     return isPrimitive(children)
       ? [createTextVNode(children)]
@@ -3184,6 +3189,7 @@
       return
     }
 
+    // 就是 Vue
     var baseCtor = context.$options._base;
 
     // plain options object: turn it into a constructor
@@ -3262,6 +3268,7 @@
 
     // return a placeholder vnode
     var name = Ctor.options.name || tag;
+    // 组件的VNode 没有 children 【第3个参数】
     var vnode = new VNode(
       ("vue-component-" + (Ctor.cid) + (name ? ("-" + name) : '')),
       data, undefined, undefined, undefined, context,
@@ -3302,6 +3309,7 @@
     }
   }
 
+  // 依次执行要合并的函数钩子
   function mergeHook$1 (f1, f2) {
     var merged = function (a, b) {
       // flow complains about extra args which is why we use any
@@ -4015,6 +4023,7 @@
     };
   }
 
+  // 用在 Vue.prototype.$mount
   function mountComponent (
     vm,
     el,
@@ -4082,8 +4091,8 @@
 
     // manually mounted instance, call mounted on self
     // mounted is called for render-created child components in its inserted hook
-    if (vm.$vnode == null) {
-      vm._isMounted = true;
+    if (vm.$vnode == null) { // vm.$vnode 表示 Vue 实例的父虚拟 Node, 为 Null 则表示当前是根 Vue 的实例
+      vm._isMounted = true; // 表示这个实例已经挂载了
       callHook(vm, 'mounted');
     }
     return vm
@@ -4519,10 +4528,13 @@
         dep.removeSub(this);
       }
     }
+    // 把 newDepIds 和 depIds 交换，后清空 newDepIds
     var tmp = this.depIds;
     this.depIds = this.newDepIds;
     this.newDepIds = tmp;
     this.newDepIds.clear();
+
+    // 把 newDeps 和 deps 交换，后清空 newDeps
     tmp = this.deps;
     this.deps = this.newDeps;
     this.newDeps = tmp;
@@ -5849,6 +5861,11 @@
     var modules = backend.modules;
     var nodeOps = backend.nodeOps;
 
+    // eg. cbs = {
+    //               create: [updateAttrs, updateClass, ...],
+    //               update: [updateAttrs, updateClass,...],
+    //                ...
+    //             }
     for (i = 0; i < hooks.length; ++i) {
       cbs[hooks[i]] = [];
       for (j = 0; j < modules.length; ++j) {
@@ -6159,6 +6176,7 @@
       }
     }
 
+    // 看图辅助理解：https://ustbhuangyi.github.io/vue-analysis/v2/reactive/component-update.html#updatechildren
     function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
       var oldStartIdx = 0;
       var newStartIdx = 0;
@@ -6256,6 +6274,7 @@
       }
     }
 
+    // 把新的 vnode patch 到旧的 vnode 上
     function patchVnode (
       oldVnode,
       vnode,
@@ -6311,19 +6330,24 @@
       }
       if (isUndef(vnode.text)) {
         if (isDef(oldCh) && isDef(ch)) {
+          // 新旧节点都存在，走 updateChildren 更新子节点
           if (oldCh !== ch) { updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly); }
         } else if (isDef(ch)) {
+          // 旧节点木有children, 直接插入新节点children
           {
             checkDuplicateKeys(ch);
           }
           if (isDef(oldVnode.text)) { nodeOps.setTextContent(elm, ''); }
           addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue);
         } else if (isDef(oldCh)) {
+          // 新节点木有children，直接移除旧节点children
           removeVnodes(oldCh, 0, oldCh.length - 1);
         } else if (isDef(oldVnode.text)) {
+          // 旧节点是文本结点，新节点也木有children，直接清空文本
           nodeOps.setTextContent(elm, '');
         }
       } else if (oldVnode.text !== vnode.text) {
+        // 文本节点且新旧文本不相同，则直接替换文本内容
         nodeOps.setTextContent(elm, vnode.text);
       }
       if (isDef(data)) {
@@ -6465,15 +6489,18 @@
       var insertedVnodeQueue = [];
 
       if (isUndef(oldVnode)) {
+        // 首次渲染
         // empty mount (likely as component), create new root element
         isInitialPatch = true;
         createElm(vnode, insertedVnodeQueue);
       } else {
         var isRealElement = isDef(oldVnode.nodeType);
         if (!isRealElement && sameVnode(oldVnode, vnode)) {
+          // 新旧节点认为相同
           // patch existing root node
           patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly);
         } else {
+          // 新旧节点不同，替换并删除旧节点，触发节点相关钩子函数(destroy, create)
           if (isRealElement) {
             // mounting to a real element
             // check if this is server-rendered content and if we can perform
@@ -11874,6 +11901,7 @@
     return el && el.innerHTML
   });
 
+  // 公共的 $mount 方法定义在 ./runtime/index.js 中
   var mount = Vue.prototype.$mount;
   Vue.prototype.$mount = function (
     el,

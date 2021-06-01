@@ -406,6 +406,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // 看图辅助理解：https://ustbhuangyi.github.io/vue-analysis/v2/reactive/component-update.html#updatechildren
   function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
     let oldStartIdx = 0
     let newStartIdx = 0
@@ -503,6 +504,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // 把新的 vnode patch 到旧的 vnode 上
   function patchVnode (
     oldVnode,
     vnode,
@@ -558,19 +560,24 @@ export function createPatchFunction (backend) {
     }
     if (isUndef(vnode.text)) {
       if (isDef(oldCh) && isDef(ch)) {
+        // 新旧节点都存在，走 updateChildren 更新子节点
         if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly)
       } else if (isDef(ch)) {
+        // 旧节点木有children, 直接插入新节点children
         if (process.env.NODE_ENV !== 'production') {
           checkDuplicateKeys(ch)
         }
         if (isDef(oldVnode.text)) nodeOps.setTextContent(elm, '')
         addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue)
       } else if (isDef(oldCh)) {
+        // 新节点木有children，直接移除旧节点children
         removeVnodes(oldCh, 0, oldCh.length - 1)
       } else if (isDef(oldVnode.text)) {
+        // 旧节点是文本结点，新节点也木有children，直接清空文本
         nodeOps.setTextContent(elm, '')
       }
     } else if (oldVnode.text !== vnode.text) {
+      // 文本节点且新旧文本不相同，则直接替换文本内容
       nodeOps.setTextContent(elm, vnode.text)
     }
     if (isDef(data)) {
@@ -712,15 +719,18 @@ export function createPatchFunction (backend) {
     const insertedVnodeQueue = []
 
     if (isUndef(oldVnode)) {
+      // 首次渲染
       // empty mount (likely as component), create new root element
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
     } else {
       const isRealElement = isDef(oldVnode.nodeType)
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
+        // 新旧节点认为相同
         // patch existing root node
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else {
+        // 新旧节点不同，替换并删除旧节点，触发节点相关钩子函数(destroy, create)
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform

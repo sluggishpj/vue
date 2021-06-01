@@ -160,7 +160,8 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
-        dep.depend()
+        dep.depend() // 把 dep 添加到 Dep.target[是watcher] 的 newDeps[] 中
+                     // 同时把 Dep.target 加入到 dep.subs[] 中
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {

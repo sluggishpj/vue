@@ -1,28 +1,51 @@
 window.onload = function () {
   let Vue = window.Vue;
-  let childComp = {
-    template: "<div>{{msg}}</div>",
-    created() {
-      console.log("child created");
+  let grandsonComp = {
+    name: "grandsonComp",
+    props: {
+      msg: {
+        type: String,
+        default: "",
+      },
     },
-    mounted() {
-      console.log("child mounted");
-    },
-    data() {
-      return {
-        msg: "Hello Vue",
-      };
-    },
+    template: `<div class="grandson">
+                  grandson: {{ msg }}
+              </div>`,
   };
 
-  Vue.mixin({
-    created() {
-      console.log("parent created");
+  let childComp = {
+    name: "childComp",
+    components: {
+      "grandson-comp": grandsonComp,
     },
-  });
+    props: {
+      msg: {
+        type: String,
+        default: "",
+      },
+    },
+    template: `<div class="child">
+                  child: {{ msg }}
+                  <grandson-comp :msg="'grandson'+msg" />
+              </div>`,
+  };
 
   new Vue({
+    components: {
+      "child-comp": childComp,
+    },
+    data() {
+      return { show: true };
+    },
+    methods: {
+      change() {
+        this.show = !this.show;
+      },
+    },
     el: "#app",
-    render: (h) => h(childComp),
+    template: `<div>parent:
+          <button  @click="change">click</button>
+          <child-comp  :msg="'showTRUE'" v-if="show"/>
+        </div>`,
   });
 };
